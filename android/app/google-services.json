@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1029220083043",
+    "project_id": "parkwise-4f027",
+    "storage_bucket": "parkwise-4f027.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1029220083043:android:6a874643d6c78df0a2df56",
+        "android_client_info": {
+          "package_name": "com.example.park_wise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVW2O84JBAfKjNX5XjIiBIyVrPAtXB6Rs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
