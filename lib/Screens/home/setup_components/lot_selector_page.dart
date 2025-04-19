@@ -27,24 +27,60 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
       return;
     }
 
-    final ref = FirebaseDatabase.instance.ref('university_info/$uid/lotInfo');
-    final snapshot = await ref.get();
+    final uniRef = FirebaseDatabase.instance.ref('university_info');
+    final uniSnapshot = await uniRef.get();
+    final currentUserEntry = uniSnapshot.child(uid);
+    final currentUserSchoolName = currentUserEntry.child('name').value as String?;
 
-    if (snapshot.exists) {
+    final currentUserRef = currentUserEntry.child('lotInfo');
+
+    if (currentUserRef.exists) {
       List<Map<dynamic, dynamic>> loadedLots = [];
-      for (final child in snapshot.children) {
-        final data = child.value as Map<dynamic, dynamic>;
-        loadedLots.add(data);
+
+      for (final child in currentUserRef.children) {
+        final data = child.value;
+        if (data is Map<dynamic, dynamic>) {
+          loadedLots.add(data);
+        }
       }
 
+      if (!mounted) return;
       setState(() {
         lots = loadedLots;
         isLoading = false;
       });
-    } 
-    else {
+    } else {
+      for (final userEntry in uniSnapshot.children) {
+        if (userEntry.child('name').value == currentUserSchoolName) {
+          final lotInfoSnap = userEntry.child('lotInfo');
+          if (lotInfoSnap.exists) {
+            await FirebaseDatabase.instance.ref('university_info/$uid/lotInfo').set(lotInfoSnap.value);
+            print('Copied lot info from another user with same school');
+            // Re-fetch once
+            final newSnapshot = await FirebaseDatabase.instance.ref('university_info/$uid/lotInfo').get();
+            if (newSnapshot.exists) {
+              List<Map<dynamic, dynamic>> loadedLots = [];
+              for (final child in newSnapshot.children) {
+                final data = child.value;
+                if (data is Map<dynamic, dynamic>) {
+                  loadedLots.add(data);
+                }
+              }
+
+              if (!mounted) return;
+              setState(() {
+                lots = loadedLots;
+                isLoading = false;
+              });
+            }
+            return;
+          }
+        }
+      }
+
+      if (!mounted) return;
       setState(() {
-        isLoading = false;
+        isLoading = true;
       });
     }
   }
@@ -68,7 +104,7 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LotFormPage(),
+                            builder: (context) => LotFormPage(index:index),
                           ),
                         );
                       },

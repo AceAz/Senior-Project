@@ -4,7 +4,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:park_wise/Screens/home/home_page.dart';
 
 class LotFormPage extends StatefulWidget {
-  const LotFormPage({Key? key}) : super(key: key);
+  final int? index;
+  const LotFormPage({Key? key, this.index}) : super(key: key);
+
 
   @override
   _LotFormPageState createState() => _LotFormPageState();
@@ -22,16 +24,17 @@ class _LotFormPageState extends State<LotFormPage> {
     }
 
     final uid = user.uid;  
-    
+    int? index = widget.index;
 
-    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info/$uid/lotInfo');
+    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info/$uid/lotInfo/$index');
+    //print(widget.index);
     //DatabaseReference ref2 = FirebaseDatabase.instance.ref('user_info/');
 
     final timestamp = DateTime.now().toIso8601String();
    
 
 
-    await ref.child(uid).update({
+    await ref.update({
       'parkingStatus': status,
       'lastUpdated': timestamp
     });
@@ -61,7 +64,7 @@ class _LotFormPageState extends State<LotFormPage> {
 
           RadioListTile(
             title: Text('Limited'),
-            value: 'limited',
+            value: 'Limited',
             subtitle: Text('Some spots still open') ,
             groupValue: status, 
             onChanged: (value) {
@@ -73,7 +76,7 @@ class _LotFormPageState extends State<LotFormPage> {
 
           RadioListTile(
             title: Text('Full'),
-            value: 'full', 
+            value: 'Full', 
             subtitle: Text('Lot is currently full') ,
             groupValue: status, 
             onChanged: (value) {

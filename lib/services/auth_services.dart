@@ -129,8 +129,8 @@ class AuthService {
         );
       }
 
-      else{
-        if (role == 'student') {
+      else if (role == 'student'){
+         
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -138,16 +138,17 @@ class AuthService {
             )
           );
         
-        }
-        else if (role == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) =>  SchoolInfoForm(selectedSchool: school )
-            )
-          );
-        }
       }
+      else if (role == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) =>  SchoolInfoForm(selectedSchool: school )
+          )
+        );
+      }
+      
+      //else{print('None of these conditions where met');}
     } 
     on FirebaseAuthException catch(e) {
       String message = '';
@@ -221,6 +222,9 @@ class AuthService {
           final data = child.value as Map<dynamic, dynamic>;
           if (data['name'] == selectedCollege) {
             exists = true;
+            await ref2.child(uid).set({
+            'name': selectedCollege,
+          });
             break;
           }
         }

@@ -30,7 +30,7 @@ class _SchoolInfoFormState extends State<SchoolInfoForm> {
   int? selectedNum;
   TextEditingController searchController = TextEditingController();
 
-  List<int> numLots = [1, 2, 3, 4, 5, 6];
+  List<int> numLots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 
   
@@ -77,7 +77,7 @@ class _SchoolInfoFormState extends State<SchoolInfoForm> {
 
             ElevatedButton(
               onPressed: () async{
-                await setNumLots();
+                //await setNumLots();
               
 
                 Navigator.push(
