@@ -86,6 +86,7 @@ class AuthService {
     required String email,
     required String password,
     required BuildContext context
+  
     
   }) async {
     
@@ -101,13 +102,24 @@ class AuthService {
       final userId = FirebaseAuth.instance.currentUser!.uid;
       // String school = await FirebaseDatabase.instance.ref("user_info/$userId/uni_name").get().toString();
       // String role = FirebaseDatabase.instance.ref("user_info/$userId/role").get().toString();
-      final userRef = FirebaseDatabase.instance.ref("user_info/$userId");
+      final universityRef = FirebaseDatabase.instance.ref("university_info");
+      final uniSnapshot = await universityRef.get();
+      String? userUniversity;
+
+      for (final uniEntry in uniSnapshot.children) {
+        final usersNode = uniEntry.child('users');
+        if (usersNode.hasChild(userId)) {
+          userUniversity = uniEntry.key;
+          break;
+        }
+      }
+      final userRef = FirebaseDatabase.instance.ref("university_info/$userUniversity/users/$userId");
 
       final snapshot = await userRef.get();
       print (snapshot.value);
       //if (snapshot.exists){
         final data = snapshot.value as Map<dynamic, dynamic>;
-        String school = data['uni_name'];
+        //String school = data['uni_name'];
         String role = data['role'];
         bool inUni = data['exist'];
         // print("$role");
@@ -143,7 +155,7 @@ class AuthService {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (BuildContext context) =>  SchoolInfoForm(selectedSchool: school )
+            builder: (BuildContext context) =>  SchoolInfoForm(selectedSchool: userUniversity )
           )
         );
       }
@@ -183,21 +195,7 @@ class AuthService {
       );
   }
 
-  Future<bool> doesSchoolExist(String schoolName) async {
-    final ref = FirebaseDatabase.instance.ref('university_info');
-    final snapshot = await ref.get();
-
-    if (snapshot.exists) {
-      for (final child in snapshot.children) {
-        final data = child.value as Map<dynamic, dynamic>;
-        if (data['name'] == schoolName) {
-          return true;
-        }
-      }
-    }
-
-    return false; // Not found
-  }
+  
 
  
   Future<void> getUniversityData(String selectedCollege, bool inUnu) async {
@@ -212,38 +210,28 @@ class AuthService {
     final uid = user.uid;
     print (uid);
 
-    DatabaseReference ref = FirebaseDatabase.instance.ref('user_info');
-    DatabaseReference ref2 = FirebaseDatabase.instance.ref('university_info');
-    try {  
-      final snapshot = await ref2.get();
-      bool exists = false;
-      if (snapshot.exists){
-        for (final child in snapshot.children){
-          final data = child.value as Map<dynamic, dynamic>;
-          if (data['name'] == selectedCollege) {
-            exists = true;
-            await ref2.child(uid).set({
-            'name': selectedCollege,
-          });
-            break;
-          }
-        }
-      }
+    //DatabaseReference ref = FirebaseDatabase.instance.ref('user_info');
+    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
+    DatabaseReference selectedCollegeRef = ref.child(selectedCollege);
+    DatabaseReference usersRef = selectedCollegeRef.child('users');
 
-      if (!exists) {
-        await ref2.child(uid).set({
-          'name': selectedCollege,
-        });
+    try {  
+      final snapshot = await selectedCollegeRef.get();
+      bool exists = snapshot.exists;
+
+      if (!exists){
+        await selectedCollegeRef.set({});
         print("New school added.");
+        
       }
       else{
         print("School already exists");
       }
 
-      await ref.child(uid).set({
-          'userId': uid,
+      await usersRef.child(uid).set({
+          //'userId': uid,
           'role': 'student',
-          'uni_name': selectedCollege,
+          //'uni_name': selectedCollege,
           'exist': inUnu,
       });
       

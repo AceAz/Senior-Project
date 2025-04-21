@@ -32,10 +32,10 @@ class _LoginFormState extends State<LoginForm> {
             controller: _email,
             cursorColor: kPrimaryColor,
             onSaved: (email) {},
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: "Your email",
               prefixIcon: Padding(
-                padding: EdgeInsets.all(defaultPadding),
+                padding: const EdgeInsets.all(20),
                 child: Icon(Icons.person),
               ),
             ),
@@ -47,10 +47,10 @@ class _LoginFormState extends State<LoginForm> {
               controller: _password,
               obscureText: true,
               cursorColor: kPrimaryColor,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Your password",
                 prefixIcon: Padding(
-                  padding: EdgeInsets.all(defaultPadding),
+                  padding: EdgeInsets.all(20),
                   child: Icon(Icons.lock),
                 ),
               ),
@@ -63,7 +63,7 @@ class _LoginFormState extends State<LoginForm> {
                 email: _email.text, 
                 password: _password.text, 
                 context: context
-
+    
                 );
                 
               },

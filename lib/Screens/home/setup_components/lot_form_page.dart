@@ -5,7 +5,8 @@ import 'package:park_wise/Screens/home/home_page.dart';
 
 class LotFormPage extends StatefulWidget {
   final int? index;
-  const LotFormPage({Key? key, this.index}) : super(key: key);
+  final String? schoolName;
+  const LotFormPage({Key? key, this.index, this.schoolName}) : super(key: key);
 
 
   @override
@@ -23,10 +24,12 @@ class _LotFormPageState extends State<LotFormPage> {
       return;
     }
 
-    final uid = user.uid;  
+    //final uid = user.uid;  
     int? index = widget.index;
+    String? schoolName = widget.schoolName;
+    //print(widget.schoolName);
 
-    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info/$uid/lotInfo/$index');
+    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info/$schoolName/feed_lotInfo/lotInfo/$index');
     //print(widget.index);
     //DatabaseReference ref2 = FirebaseDatabase.instance.ref('user_info/');
 

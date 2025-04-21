@@ -13,6 +13,7 @@ class LotSelectorPage extends StatefulWidget {
 class _LotSelectorPageState extends State<LotSelectorPage> {
   List<Map<dynamic, dynamic>> lots = [];
   bool isLoading = true;
+  String? userUniversity;
 
   @override
   void initState() {
@@ -27,66 +28,70 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
       return;
     }
 
-    final uniRef = FirebaseDatabase.instance.ref('university_info');
-    final uniSnapshot = await uniRef.get();
-    final currentUserEntry = uniSnapshot.child(uid);
-    final currentUserSchoolName = currentUserEntry.child('name').value as String?;
+      // Step 1: Find the user's university by searching all schools
+    final universityRef = FirebaseDatabase.instance.ref('university_info');
 
-    final currentUserRef = currentUserEntry.child('lotInfo');
+    try {
+      final uniSnapshot = await universityRef.get();
+      //String? userUniversity;
 
-    if (currentUserRef.exists) {
+      for (final uniEntry in uniSnapshot.children) {
+        final usersNode = uniEntry.child('users');
+        if (usersNode.hasChild(uid)) {
+          userUniversity = uniEntry.key;
+          break;
+        }
+      }
+
+      if (userUniversity == null){
+        print('User university not found in database');
+        return;
+      }
+
+      final lotRef = universityRef.child('$userUniversity/feed_lotInfo/lotInfo');
+      final lotRefSnapshot = await lotRef.get();
+
+      if (!lotRefSnapshot.exists) {
+        print('No template lot info found for $userUniversity');
+        if (!mounted) return;
+        setState(() {
+          lots = [];
+          isLoading = false;
+        });
+        return;
+      }
+
+
       List<Map<dynamic, dynamic>> loadedLots = [];
-
-      for (final child in currentUserRef.children) {
+      for (final child in lotRefSnapshot.children) {
         final data = child.value;
         if (data is Map<dynamic, dynamic>) {
           loadedLots.add(data);
         }
       }
-
       if (!mounted) return;
       setState(() {
         lots = loadedLots;
         isLoading = false;
       });
-    } else {
-      for (final userEntry in uniSnapshot.children) {
-        if (userEntry.child('name').value == currentUserSchoolName) {
-          final lotInfoSnap = userEntry.child('lotInfo');
-          if (lotInfoSnap.exists) {
-            await FirebaseDatabase.instance.ref('university_info/$uid/lotInfo').set(lotInfoSnap.value);
-            print('Copied lot info from another user with same school');
-            // Re-fetch once
-            final newSnapshot = await FirebaseDatabase.instance.ref('university_info/$uid/lotInfo').get();
-            if (newSnapshot.exists) {
-              List<Map<dynamic, dynamic>> loadedLots = [];
-              for (final child in newSnapshot.children) {
-                final data = child.value;
-                if (data is Map<dynamic, dynamic>) {
-                  loadedLots.add(data);
-                }
-              }
 
-              if (!mounted) return;
-              setState(() {
-                lots = loadedLots;
-                isLoading = false;
-              });
-            }
-            return;
-          }
-        }
-      }
+    } 
 
+    catch (e) {
+      print('Error retrieving feed lot info: $e');
       if (!mounted) return;
       setState(() {
-        isLoading = true;
+        lots = [];
+        isLoading = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    print ('we are in built at least');
+    print('Lots length: ${lots.length}');
+
     return Scaffold(
       appBar: AppBar(title: const Text("Select a Lot")),
       body: isLoading
@@ -104,7 +109,7 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LotFormPage(index:index),
+                            builder: (context) => LotFormPage(index:index, schoolName: userUniversity),
                           ),
                         );
                       },

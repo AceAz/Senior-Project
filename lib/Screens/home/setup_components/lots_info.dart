@@ -60,7 +60,10 @@ class _LotsInfoState extends State<LotsInfo> {
     
 
     DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
-    DatabaseReference ref2 = FirebaseDatabase.instance.ref('user_info/');
+    DatabaseReference ref2 = ref.child(widget.schoolName!);
+    DatabaseReference ref3 = ref2.child('users/');
+    DatabaseReference ref4 = ref2.child('feed_lotInfo/');
+
    
 
     
@@ -82,12 +85,12 @@ class _LotsInfoState extends State<LotsInfo> {
       'longitude': lot.longitude,
     }).toList();
 
-    await ref.child(uid).set({
-      'name' : widget.schoolName,
+    await ref4.set({
+     // 'name' : widget.schoolName,
       'lotInfo' : lotData,
     });
 
-    await ref2.child(uid).update({
+    await ref3.child(uid).update({
       'exist': true,
     });
 

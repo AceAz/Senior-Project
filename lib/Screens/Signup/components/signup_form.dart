@@ -78,7 +78,7 @@ class _SignUpFormState extends State<SignUpForm> {
             controller: _email,
             cursorColor: kPrimaryColor,
             onSaved: (email) {},
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: "Your email",
               prefixIcon: Padding(
                 padding: EdgeInsets.all(defaultPadding),
@@ -93,7 +93,7 @@ class _SignUpFormState extends State<SignUpForm> {
               controller: _password,
               obscureText: true,
               cursorColor: kPrimaryColor,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Your password",
                 prefixIcon: Padding(
                   padding: EdgeInsets.all(defaultPadding),
@@ -111,6 +111,10 @@ class _SignUpFormState extends State<SignUpForm> {
               controller: searchController,
               decoration: InputDecoration(
                 labelText: 'University Name',
+                prefixIcon: Padding(
+                  padding: EdgeInsets.all(defaultPadding),
+                  child: Icon(Icons.school)
+                ),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -126,9 +130,11 @@ class _SignUpFormState extends State<SignUpForm> {
               onSelected: (value)  {
                 setState(() async {
                    selectedCollege = value;
+                   bool exists =  await doesSchoolExist(selectedCollege!);
+                   print("School exists? $exists");
                    //selectedCollege2 = selectedCollege;
-                   inUni =  await doesSchoolExist(selectedCollege!);
-                   print(inUni);
+                   inUni = exists;
+                   
                  });
               },
                menuStyle: MenuStyle(
@@ -182,19 +188,11 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   Future<bool> doesSchoolExist(String schoolName) async {
-    final ref = FirebaseDatabase.instance.ref('university_info');
+    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
     final snapshot = await ref.get();
-
-    if (snapshot.exists) {
-      for (final child in snapshot.children) {
-        final data = child.value as Map<dynamic, dynamic>;
-        if (data['name'] == schoolName) {
-          return true;
-        }
-      }
-    }
-
-    return false; // Not found
+    //print (schoolName);
+    //print (snapshot.hasChild(schoolName));
+    return snapshot.hasChild(schoolName);
   }
   
 }

@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart'; // for time formatting
 
 class FeedPage extends StatefulWidget {
+  
   const FeedPage({super.key});
 
   @override
@@ -14,6 +15,7 @@ class _FeedPageState extends State<FeedPage> {
   
   List<Map<String, dynamic>> posts = [];
   bool isLoading = true;
+  String? schoolName;
 
   @override
   void initState() {
@@ -22,66 +24,80 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   Future<void> fetchPosts() async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    
-    
-    final DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
-    final snapshot = await ref.get();
-    
+    //String? schoolName;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uref = FirebaseDatabase.instance.ref('university_info');
+    final snapshot = await uref.get();
 
     if (snapshot.exists) {
+      for (final school in snapshot.children) {
+        final uniName = school.key;
+        final users = school.child('users');
+        if (users.hasChild(uid!)) {
+          setState(() {
+            schoolName = uniName;
+          });
+           
+        }
+      }
+    }
+
+
+
+    if (schoolName == null) {
+      print('No school name provided');
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
+    final DatabaseReference ref = FirebaseDatabase.instance
+        .ref('university_info/$schoolName/feed_lotInfo/lotInfo');
+
+    try {
+      final snapshot = await ref.get();
+
+      if (!snapshot.exists) {
+        print('No feed_lotInfo found');
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
       List<Map<String, dynamic>> loadedPosts = [];
-      String? userUniversityName;
 
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-
-      data.forEach((userId, entry) {
-        if (userId == uid) {
-          userUniversityName = entry['name'] ?? 'Unknown';
+      for (final child in snapshot.children) {
+        final data = child.value;
+        if (data is Map) {
+          loadedPosts.add({
+            'lotName': data['lotname'] ?? 'Unnamed Lot',
+            'status': data['parkingStatus'] ?? 'Unknown',
+            'time': data['lastUpdated'] ?? 'N/A',
+          });
         }
+      }
 
-        final universityName = entry['name'] ?? 'Unknown';
-
-        if (userUniversityName == universityName){
-          final lotInfo = entry['lotInfo'] ?? {};
-        
-
-          if (lotInfo is List){
-            for(var lot in lotInfo){
-              if (lot is Map){
-                loadedPosts.add({
-                  'lotName': lot['lotname'] ?? 'Unnamed Lot',
-                  'status': lot['parkingStatus'] ?? 'unknown',
-                  'time': lot['lastUpdated'] ?? 'N/A',
-                  
-                });
-                
-              }
-            }
-          }
-        }
-        
       loadedPosts.sort((a, b) {
         final aTime = DateTime.tryParse(a['time'] ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
         final bTime = DateTime.tryParse(b['time'] ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        return bTime.compareTo(aTime); // descending: latest first
-      });
-
- 
+        return bTime.compareTo(aTime); // latest first
       });
 
       setState(() {
         posts = loadedPosts;
         isLoading = false;
       });
-    }
-    
-    else {
+
+    } catch (e) {
+      print('Error fetching posts: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
+
 
   String formatTime(String isoTime) {
     try {
@@ -112,7 +128,9 @@ class _FeedPageState extends State<FeedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Parking Feed')),
+      appBar: AppBar(
+        title: Text(schoolName != null ? '$schoolName' : 'Parking Feed'),
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
            :posts.isEmpty

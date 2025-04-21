@@ -99,28 +99,6 @@ class _SchoolInfoFormState extends State<SchoolInfoForm> {
       ),
     );
   }
-
- Future<void> setNumLots() async {
-
-  DatabaseReference ref = FirebaseDatabase.instance.ref("university_info");
-
-    try {
-        await ref.push().set({
-          'numLots': selectedNum,
-        });
-        print("Num of lots added.");
-      
-      
-      
-    }
-
-    catch (e) {
-      print("Error storing data: $e");
-    }
-  }
-
-  
-
 }
 
 
