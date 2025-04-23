@@ -20,18 +20,13 @@ class _LotFormPageState extends State<LotFormPage> {
   Future<void> handleSubmit(String status) async  {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print("No user is currently logged in.");
       return;
     }
 
-    //final uid = user.uid;  
     int? index = widget.index;
     String? schoolName = widget.schoolName;
-    //print(widget.schoolName);
 
     DatabaseReference ref = FirebaseDatabase.instance.ref('university_info/$schoolName/feed_lotInfo/lotInfo/$index');
-    //print(widget.index);
-    //DatabaseReference ref2 = FirebaseDatabase.instance.ref('user_info/');
 
     final timestamp = DateTime.now().toIso8601String();
    
@@ -48,7 +43,7 @@ class _LotFormPageState extends State<LotFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Lot Form Page"),
+        title: Text("Current Status"),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -90,15 +85,17 @@ class _LotFormPageState extends State<LotFormPage> {
           ),
 
             ElevatedButton(
-              onPressed: () async {
-                await handleSubmit(status );
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HomePage(),
-                  ),
-                );
-              },
+              onPressed: status.isEmpty 
+                ? null
+                :  () async {
+                    await handleSubmit(status );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(),
+                      ),
+                    );
+                  },
               
               
               child: const Text("Post"),

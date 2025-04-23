@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:park_wise/Screens/home/home_page.dart';
 import 'package:park_wise/firebase_options.dart';
 import '/Screens/Welcome/welcome_screen.dart';
 import '/constants.dart';
@@ -20,20 +22,19 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Auth',
       theme: ThemeData(
-          primaryColor: kPrimaryColor,
+          primaryColor: const Color.fromARGB(255, 21, 206, 230),
           scaffoldBackgroundColor: Colors.white,
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
               elevation: 0,
               foregroundColor: Colors.white,
-              backgroundColor: kPrimaryColor,
+              backgroundColor: const Color.fromARGB(255, 39, 174, 215),
               shape: const StadiumBorder(),
               maximumSize: const Size(double.infinity, 56),
               minimumSize: const Size(double.infinity, 56),
@@ -42,8 +43,8 @@ class MyApp extends StatelessWidget {
           inputDecorationTheme: const InputDecorationTheme(
             filled: true,
             fillColor: kPrimaryLightColor,
-            iconColor: kPrimaryColor,
-            prefixIconColor: kPrimaryColor,
+            iconColor:  Color.fromARGB(255, 21, 206, 230),
+            prefixIconColor:  Color.fromARGB(255, 21, 206, 230),
             contentPadding: EdgeInsets.symmetric(
                 horizontal: defaultPadding, vertical: defaultPadding),
             border: OutlineInputBorder(
@@ -51,8 +52,20 @@ class MyApp extends StatelessWidget {
               borderSide: BorderSide.none,
             ),
           )),
-      home: const WelcomeScreen(), 
-      //HomePage(),
+            home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator(); 
+          }
+          if (snapshot.hasData) {
+            return HomePage(); 
+          } else {
+            return WelcomeScreen(); 
+          }
+        },
+      ),
     );
   }
 }

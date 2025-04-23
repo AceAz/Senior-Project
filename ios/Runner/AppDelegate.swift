@@ -1,5 +1,8 @@
 import Flutter
 import UIKit
+import GoogleMaps
+
+GMSServices.provideAPIKey("AIzaSyD1c-Egb7s2h9wUlOynr6jE6yYZcarIOY4")
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {

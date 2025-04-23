@@ -1,18 +1,5 @@
-//import 'dart:convert';
-
-//import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-
-
-
 import '../setup_components/lots_info.dart';
-
-import 'package:firebase_database/firebase_database.dart';
-
-
-
-
-
 
 class SchoolInfoForm extends StatefulWidget {
 final String? selectedSchool;
@@ -26,11 +13,11 @@ final String? selectedSchool;
 class _SchoolInfoFormState extends State<SchoolInfoForm> {
   List<String> colleges = [];
   String? selectedCollege;
-  //int? selectedNumD;
   int? selectedNum;
   TextEditingController searchController = TextEditingController();
 
-  List<int> numLots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  List<int> numLots = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+   11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
 
   
@@ -59,16 +46,12 @@ class _SchoolInfoFormState extends State<SchoolInfoForm> {
                 setState(() {
                   selectedNum = value;
                 });
-                debugPrint('Value: $value');
               }, 
               
-              //enableSearch: true,
               requestFocusOnTap: true,
-              //enableFilter: true,
-
               menuStyle: MenuStyle(
                 maximumSize: WidgetStateProperty.all<Size>(
-                  Size(300, 250), // Adjust height for ~5 items (each ~48px)
+                  Size(300, 250),
                 ),
               ),
             ),
@@ -77,7 +60,15 @@ class _SchoolInfoFormState extends State<SchoolInfoForm> {
 
             ElevatedButton(
               onPressed: () async{
-                //await setNumLots();
+                if (selectedNum == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please select the number of parking lots.'),
+                      backgroundColor: Color.fromRGBO(200, 0, 0, 0.5)
+                    ),
+                  );
+                  return;
+                }
               
 
                 Navigator.push(

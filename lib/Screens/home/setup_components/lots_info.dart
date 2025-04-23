@@ -42,7 +42,6 @@ class _LotsInfoState extends State<LotsInfo> {
 
   @override
   void dispose() {
-    // Dispose controllers
     for (final controller in [...lotNameControllers, ...latitudeControllers, ...longitudeControllers]) {
       controller.dispose();
     }
@@ -52,9 +51,79 @@ class _LotsInfoState extends State<LotsInfo> {
   Future<void> handleSubmit() async  {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print("No user is currently logged in.");
       return;
     }
+    
+    Future<void> handleSubmit() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    return;
+  }
+
+  
+  for (int i = 0; i < widget.numLots!; i++) {
+    if (lotNameControllers[i].text.trim().isEmpty ||
+        latitudeControllers[i].text.trim().isEmpty ||
+        longitudeControllers[i].text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please fill in all fields for Lot ${i + 1}.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    
+    if (double.tryParse(latitudeControllers[i].text) == null ||
+        double.tryParse(longitudeControllers[i].text) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid latitude or longitude for Lot ${i + 1}.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+  }
+
+  final uid = user.uid;
+  DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
+  DatabaseReference ref2 = ref.child(widget.schoolName!);
+  DatabaseReference ref3 = ref2.child('users/');
+  DatabaseReference ref4 = ref2.child('feed_lotInfo/');
+
+  List<Lot> lots = [];
+  for (int i = 0; i < widget.numLots!; i++) {
+    String name = lotNameControllers[i].text.trim();
+    double latitude = double.parse(latitudeControllers[i].text.trim());
+    double longitude = double.parse(longitudeControllers[i].text.trim());
+
+    lots.add(Lot(name: name, latitude: latitude, longitude: longitude));
+  }
+
+  List<Map<String, dynamic>> lotData = lots.map((lot) => {
+    'lotname': lot.name,
+    'latitude': lot.latitude,
+    'longitude': lot.longitude,
+  }).toList();
+
+  await ref4.set({
+    'lotInfo': lotData,
+  });
+
+  await ref3.child(uid).update({
+    'exist': true,
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Your School has been successfully added to the service"),
+      duration: Duration(seconds: 4),
+    ),
+  );
+}
+
 
     final uid = user.uid;  
     
@@ -86,7 +155,6 @@ class _LotsInfoState extends State<LotsInfo> {
     }).toList();
 
     await ref4.set({
-     // 'name' : widget.schoolName,
       'lotInfo' : lotData,
     });
 
@@ -96,17 +164,10 @@ class _LotsInfoState extends State<LotsInfo> {
 
 
 
-    // Print the collected lot details
-    lots.forEach((lot) {
-      
-      print("Lot Name: ${lot.name}, Latitude: ${lot.latitude}, Longitude: ${lot.longitude}");
-    });
-
-    // You can now push this data to Firebase or pass it along for further processing.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Your School has been successfully added to the service"),
-        duration: Duration(seconds: 4), // Show for 2 seconds
+        duration: Duration(seconds: 4), 
       ),
     );
   }

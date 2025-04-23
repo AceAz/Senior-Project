@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:intl/intl.dart'; // for time formatting
+import 'package:intl/intl.dart'; 
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 
 class FeedPage extends StatefulWidget {
   
@@ -24,7 +26,6 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   Future<void> fetchPosts() async {
-    //String? schoolName;
     final uid = FirebaseAuth.instance.currentUser?.uid;
     final uref = FirebaseDatabase.instance.ref('university_info');
     final snapshot = await uref.get();
@@ -45,7 +46,6 @@ class _FeedPageState extends State<FeedPage> {
 
 
     if (schoolName == null) {
-      print('No school name provided');
       setState(() {
         isLoading = false;
       });
@@ -59,7 +59,6 @@ class _FeedPageState extends State<FeedPage> {
       final snapshot = await ref.get();
 
       if (!snapshot.exists) {
-        print('No feed_lotInfo found');
         setState(() {
           isLoading = false;
         });
@@ -75,6 +74,8 @@ class _FeedPageState extends State<FeedPage> {
             'lotName': data['lotname'] ?? 'Unnamed Lot',
             'status': data['parkingStatus'] ?? 'Unknown',
             'time': data['lastUpdated'] ?? 'N/A',
+            'latitude': data['latitude'] ?? 'N/A',
+            'longitude': data['longitude'] ?? 'N/A',
           });
         }
       }
@@ -91,7 +92,6 @@ class _FeedPageState extends State<FeedPage> {
       });
 
     } catch (e) {
-      print('Error fetching posts: $e');
       setState(() {
         isLoading = false;
       });
@@ -125,39 +125,83 @@ class _FeedPageState extends State<FeedPage> {
     await fetchPosts(); 
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(schoolName != null ? '$schoolName' : 'Parking Feed'),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-           :posts.isEmpty
+          : posts.isEmpty
               ? const Center(child: Text("No updates yet"))
               : RefreshIndicator(
                   onRefresh: _refresh,
-                child: ListView.builder(
+                  child: ListView.builder(
                     itemCount: posts.length,
                     itemBuilder: (context, index) {
                       final post = posts[index];
+                      final latitude = post['latitude'];
+                      final longitude = post['longitude'];
+
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: ListTile(
-                          leading: Icon(Icons.local_parking, color: getStatusColor(post['status'])),
-                          title: Text(post['lotName']),
-                          subtitle: Column(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Status: ${post['status']}"),
-                              Text("Last updated: ${formatTime(post['time'])}"),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.local_parking, color: getStatusColor(post['status'])),
+                                title: Text(post['lotName']),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Status: ${post['status']}"),
+                                    Text("Last updated: ${formatTime(post['time'])}"),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              if (latitude != null &&
+                                  longitude != null &&
+                                  latitude is num &&
+                                  longitude is num)
+                                Container(
+                                  height: 200,
+                                  child: GoogleMap(
+                                    initialCameraPosition: CameraPosition(
+                                      target: LatLng(latitude.toDouble(), longitude.toDouble()),
+                                      zoom: 16.0,
+                                    ),
+                                    markers: {
+                                      Marker(
+                                        markerId: MarkerId(post['lotName']),
+                                        position: LatLng(latitude.toDouble(), longitude.toDouble()),
+                                        infoWindow: InfoWindow(
+                                          title: post['lotName'],
+                                          snippet: post['status'],
+                                        ),
+                                      ),
+                                    },
+                                    myLocationEnabled: false,
+                                    zoomControlsEnabled: false,
+                                    liteModeEnabled: true,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                       );
                     },
                   ),
-              ),
+                ),
     );
   }
+
+
 }

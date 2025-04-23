@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
-//import 'package:park_wise/Screens/home/setup_components/school_info_form.dart';
 import 'package:park_wise/services/auth_services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-//import '../../home/home_page.dart';
-
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
-
 
 import '../../../components/already_have_an_account_acheck.dart';
 import '../../../constants.dart';
@@ -34,6 +28,8 @@ class _SignUpFormState extends State<SignUpForm> {
   int? selectedNumD;
   String? selectedCollege2;
   bool inUni = false;
+  bool _obscurePassword = true;
+  
 
   Future<void> fetchFilteredColleges(String query) async {
     final url = Uri.parse(
@@ -46,7 +42,7 @@ class _SignUpFormState extends State<SignUpForm> {
       setState(() {
         colleges = results
             .map((item) => item['school']['name'].toString())
-            .toSet() // remove duplicates
+            .toSet()
             .toList();
       });
     }
@@ -91,7 +87,7 @@ class _SignUpFormState extends State<SignUpForm> {
             child: TextFormField(
               textInputAction: TextInputAction.done,
               controller: _password,
-              obscureText: true,
+              obscureText: _obscurePassword,
               cursorColor: kPrimaryColor,
               decoration: InputDecoration(
                 hintText: "Your password",
@@ -99,6 +95,18 @@ class _SignUpFormState extends State<SignUpForm> {
                   padding: EdgeInsets.all(defaultPadding),
                   child: Icon(Icons.lock),
                 ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                  
+                  
+                  )
               ),
             ),
           ),
@@ -131,8 +139,6 @@ class _SignUpFormState extends State<SignUpForm> {
                 setState(() async {
                    selectedCollege = value;
                    bool exists =  await doesSchoolExist(selectedCollege!);
-                   print("School exists? $exists");
-                   //selectedCollege2 = selectedCollege;
                    inUni = exists;
                    
                  });
@@ -147,7 +153,6 @@ class _SignUpFormState extends State<SignUpForm> {
           ElevatedButton(
             onPressed: () async {
               if (selectedCollege == null) {
-                // Show a message that the user needs to select a school
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Please select a school.")),
                 );
@@ -190,8 +195,6 @@ class _SignUpFormState extends State<SignUpForm> {
   Future<bool> doesSchoolExist(String schoolName) async {
     DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
     final snapshot = await ref.get();
-    //print (schoolName);
-    //print (snapshot.hasChild(schoolName));
     return snapshot.hasChild(schoolName);
   }
   

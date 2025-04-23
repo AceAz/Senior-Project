@@ -7,11 +7,9 @@ import 'package:park_wise/Screens/home/setup_components/school_info_form.dart';
 import '../Screens/home/home_page.dart';
 import '../Screens/Login/login_screen.dart';
 import '../Screens/home/setup_components/school_not_supported_page.dart';
-import '../Screens/Signup/components/signup_form.dart';
-class AuthService {
 
+class AuthService {
   List<String> colleges = [];
-  //String? selectedCollege;
   int? selectedNumD;
   String userRole = '';
     
@@ -24,18 +22,12 @@ class AuthService {
     required bool exist
   }) async {
 
-    //final String? schoolName = selectedCollege;
-
-    
     try {
 
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password
       );
-
-      //await Future.delayed(const Duration(seconds: 1));
-
       await getUniversityData(selectedCollege, exist);
       
       Navigator.pushReplacement(
@@ -45,13 +37,7 @@ class AuthService {
           builder: (BuildContext context) =>  LoginScreen()
         )
       );
-      
 
-      
-      
-
-      
-      
     }
      on FirebaseAuthException catch(e) {
       String message = '';
@@ -73,11 +59,9 @@ class AuthService {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Account created. You can log in now."),
-        duration: Duration(seconds: 2), // Show for 2 seconds
+        duration: Duration(seconds: 2), 
       ),
     );
-    
-
   }
 
 
@@ -100,8 +84,6 @@ class AuthService {
       await Future.delayed(const Duration(seconds: 1));
 
       final userId = FirebaseAuth.instance.currentUser!.uid;
-      // String school = await FirebaseDatabase.instance.ref("user_info/$userId/uni_name").get().toString();
-      // String role = FirebaseDatabase.instance.ref("user_info/$userId/role").get().toString();
       final universityRef = FirebaseDatabase.instance.ref("university_info");
       final uniSnapshot = await universityRef.get();
       String? userUniversity;
@@ -116,23 +98,10 @@ class AuthService {
       final userRef = FirebaseDatabase.instance.ref("university_info/$userUniversity/users/$userId");
 
       final snapshot = await userRef.get();
-      print (snapshot.value);
-      //if (snapshot.exists){
         final data = snapshot.value as Map<dynamic, dynamic>;
-        //String school = data['uni_name'];
         String role = data['role'];
         bool inUni = data['exist'];
-        // print("$role");
-        // print("$school");
-        print(inUni);
-
-      //}
-      //else{print("its doesnt exist");}
-      
-      
-      //final exists = await doesSchoolExist(school);
       if (inUni) {
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -160,7 +129,6 @@ class AuthService {
         );
       }
       
-      //else{print('None of these conditions where met');}
     } 
     on FirebaseAuthException catch(e) {
       String message = '';
@@ -203,43 +171,25 @@ class AuthService {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      print("No user is currently logged in.");
       return;
     }
 
     final uid = user.uid;
-    print (uid);
-
-    //DatabaseReference ref = FirebaseDatabase.instance.ref('user_info');
     DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
     DatabaseReference selectedCollegeRef = ref.child(selectedCollege);
     DatabaseReference usersRef = selectedCollegeRef.child('users');
 
-    try {  
-      final snapshot = await selectedCollegeRef.get();
-      bool exists = snapshot.exists;
+   
+    final snapshot = await selectedCollegeRef.get();
+    bool exists = snapshot.exists;
 
-      if (!exists){
-        await selectedCollegeRef.set({});
-        print("New school added.");
-        
-      }
-      else{
-        print("School already exists");
-      }
-
-      await usersRef.child(uid).set({
-          //'userId': uid,
-          'role': 'student',
-          //'uni_name': selectedCollege,
-          'exist': inUnu,
-      });
+    if (!exists){
+      await selectedCollegeRef.set({});
       
     }
-
-    catch (e) {
-      print("Error storing data: $e");
-    }
-  }
-  
+    await usersRef.child(uid).set({
+        'role': 'student',
+        'exist': inUnu,
+    }); 
+  } 
 }

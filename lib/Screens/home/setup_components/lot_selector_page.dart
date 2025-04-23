@@ -24,16 +24,13 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
   Future<void> getLotFromDatabase () async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      print('No user logged in');
       return;
     }
 
-      // Step 1: Find the user's university by searching all schools
     final universityRef = FirebaseDatabase.instance.ref('university_info');
 
     try {
       final uniSnapshot = await universityRef.get();
-      //String? userUniversity;
 
       for (final uniEntry in uniSnapshot.children) {
         final usersNode = uniEntry.child('users');
@@ -44,7 +41,6 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
       }
 
       if (userUniversity == null){
-        print('User university not found in database');
         return;
       }
 
@@ -52,7 +48,6 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
       final lotRefSnapshot = await lotRef.get();
 
       if (!lotRefSnapshot.exists) {
-        print('No template lot info found for $userUniversity');
         if (!mounted) return;
         setState(() {
           lots = [];
@@ -78,7 +73,6 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
     } 
 
     catch (e) {
-      print('Error retrieving feed lot info: $e');
       if (!mounted) return;
       setState(() {
         lots = [];
@@ -89,11 +83,10 @@ class _LotSelectorPageState extends State<LotSelectorPage> {
 
   @override
   Widget build(BuildContext context) {
-    print ('we are in built at least');
-    print('Lots length: ${lots.length}');
-
     return Scaffold(
-      appBar: AppBar(title: const Text("Select a Lot")),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text("Select a Lot")),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
