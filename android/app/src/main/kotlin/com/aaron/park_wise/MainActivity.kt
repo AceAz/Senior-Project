@@ -1,4 +1,4 @@
-package com.example.park_wise
+package com.aaron.park_wise
 
 import io.flutter.embedding.android.FlutterActivity
 

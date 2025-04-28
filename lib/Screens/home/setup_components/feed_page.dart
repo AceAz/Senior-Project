@@ -101,7 +101,7 @@ class _FeedPageState extends State<FeedPage> {
 
   String formatTime(String isoTime) {
     try {
-      final dateTime = DateTime.parse(isoTime);
+      final dateTime = DateTime.parse(isoTime).toLocal();
       return DateFormat.yMMMd().add_jm().format(dateTime);
     } catch (e) {
       return isoTime;

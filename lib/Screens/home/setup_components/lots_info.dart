@@ -18,7 +18,6 @@ class Lot {
 class LotsInfo extends StatefulWidget {
   final int? numLots;
   final String? schoolName;
-  
 
   const LotsInfo({Key? key, required this.numLots, required this.schoolName}) : super(key: key);
 
@@ -34,7 +33,6 @@ class _LotsInfoState extends State<LotsInfo> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers for lot names, latitude, and longitude
     lotNameControllers = List.generate(widget.numLots!, (index) => TextEditingController());
     latitudeControllers = List.generate(widget.numLots!, (index) => TextEditingController());
     longitudeControllers = List.generate(widget.numLots!, (index) => TextEditingController());
@@ -48,105 +46,48 @@ class _LotsInfoState extends State<LotsInfo> {
     super.dispose();
   }
 
-  Future<void> handleSubmit() async  {
+  Future<void> handleSubmit() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return;
-    }
-    
-    Future<void> handleSubmit() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    return;
-  }
+    if (user == null) return;
 
-  
-  for (int i = 0; i < widget.numLots!; i++) {
-    if (lotNameControllers[i].text.trim().isEmpty ||
-        latitudeControllers[i].text.trim().isEmpty ||
-        longitudeControllers[i].text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please fill in all fields for Lot ${i + 1}.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    
-    if (double.tryParse(latitudeControllers[i].text) == null ||
-        double.tryParse(longitudeControllers[i].text) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Invalid latitude or longitude for Lot ${i + 1}.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-  }
-
-  final uid = user.uid;
-  DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
-  DatabaseReference ref2 = ref.child(widget.schoolName!);
-  DatabaseReference ref3 = ref2.child('users/');
-  DatabaseReference ref4 = ref2.child('feed_lotInfo/');
-
-  List<Lot> lots = [];
-  for (int i = 0; i < widget.numLots!; i++) {
-    String name = lotNameControllers[i].text.trim();
-    double latitude = double.parse(latitudeControllers[i].text.trim());
-    double longitude = double.parse(longitudeControllers[i].text.trim());
-
-    lots.add(Lot(name: name, latitude: latitude, longitude: longitude));
-  }
-
-  List<Map<String, dynamic>> lotData = lots.map((lot) => {
-    'lotname': lot.name,
-    'latitude': lot.latitude,
-    'longitude': lot.longitude,
-  }).toList();
-
-  await ref4.set({
-    'lotInfo': lotData,
-  });
-
-  await ref3.child(uid).update({
-    'exist': true,
-  });
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Your School has been successfully added to the service"),
-      duration: Duration(seconds: 4),
-    ),
-  );
-}
-
-
-    final uid = user.uid;  
-    
-
-    DatabaseReference ref = FirebaseDatabase.instance.ref('university_info');
-    DatabaseReference ref2 = ref.child(widget.schoolName!);
-    DatabaseReference ref3 = ref2.child('users/');
-    DatabaseReference ref4 = ref2.child('feed_lotInfo/');
-
-   
-
-    
-    List<Lot> lots = [];
     for (int i = 0; i < widget.numLots!; i++) {
-      String name = lotNameControllers[i].text;
-      double latitude = double.tryParse(latitudeControllers[i].text) ?? 0.0;
-      double longitude = double.tryParse(longitudeControllers[i].text) ?? 0.0;
+      if (lotNameControllers[i].text.trim().isEmpty ||
+          latitudeControllers[i].text.trim().isEmpty ||
+          longitudeControllers[i].text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please fill in all fields for Lot ${i + 1}.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-      lots.add(Lot(name: name, latitude: latitude, longitude: longitude));
+      if (double.tryParse(latitudeControllers[i].text) == null ||
+          double.tryParse(longitudeControllers[i].text) == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid latitude or longitude for Lot ${i + 1}.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
     }
 
+    final uid = user.uid;
+    final ref = FirebaseDatabase.instance.ref('university_info');
+    final schoolRef = ref.child(widget.schoolName!);
+    final userRef = schoolRef.child('users/$uid');
+    final lotRef = schoolRef.child('feed_lotInfo');
 
-    
+    List<Lot> lots = List.generate(widget.numLots!, (i) {
+      return Lot(
+        name: lotNameControllers[i].text.trim(),
+        latitude: double.parse(latitudeControllers[i].text.trim()),
+        longitude: double.parse(longitudeControllers[i].text.trim()),
+      );
+    });
 
     List<Map<String, dynamic>> lotData = lots.map((lot) => {
       'lotname': lot.name,
@@ -154,27 +95,19 @@ class _LotsInfoState extends State<LotsInfo> {
       'longitude': lot.longitude,
     }).toList();
 
-    await ref4.set({
-      'lotInfo' : lotData,
-    });
-
-    await ref3.child(uid).update({
-      'exist': true,
-    });
-
-
+    await lotRef.set({'lotInfo': lotData});
+    await userRef.update({'exist': true});
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Your School has been successfully added to the service"),
-        duration: Duration(seconds: 4), 
+        duration: Duration(seconds: 4),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-   
     return Scaffold(
       appBar: AppBar(title: const Text("Enter Lot Details")),
       body: Padding(
@@ -225,25 +158,14 @@ class _LotsInfoState extends State<LotsInfo> {
                 await handleSubmit();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => LoginScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
                 );
               },
-              
-              
               child: const Text("Submit"),
-
-            ),           
-            
+            ),
           ],
         ),
-        
       ),
     );
   }
-  
-
-  
 }
-
